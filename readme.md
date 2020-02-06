@@ -1,4 +1,5 @@
-# Typescript and webpack 4 starter kit
+# OpenCV webworker in Typescript and webpack 4
+
 
     npm install
 
