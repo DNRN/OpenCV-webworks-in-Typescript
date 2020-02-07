@@ -1,9 +1,11 @@
 import cv from '../assets/scripts/opencv.js';
 
 
-cv.onRuntimeInitialized = async () => {
+cv.onRuntimeInitialized = () => {
     console.log('📦OpenCV runtime loaded from web worker');
-    init().then();
+    init().then(() => {
+
+    });
 };
 
 const ctx: Worker = self as any;
@@ -16,8 +18,16 @@ const init = async() => {
 
     let _src;
     let _dimensions;
+    let _name;
 
     const actions = new Map<string, ((...args) => void)> ([
+        ['init', (name: string) => {
+            _name = name;
+            ctx.postMessage({
+                type: 'msg',
+                args: `Worker ${_name} initialized`
+            });
+        }],
         ['load', (imageData: ImageData) => {
             const src = new cv.Mat(imageData.height, imageData.width, cv.CV_8UC4);
             src.data.set(imageData.data);
@@ -52,13 +62,14 @@ const init = async() => {
     ]);
 
     const handleAction = message => {
+        console.log('Worker action', message.data);
         const action = actions.get(message.data.name);
         action ? action(message.data.args) : console.error('Action not found', message);
     } 
     ctx.addEventListener('message', handleAction);
 
     ctx.postMessage({
-        type: 'msg',
+        type: 'ready',
         args: 'OpenCV worker created'
     });
 }
